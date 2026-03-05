@@ -1,0 +1,50 @@
+@startuml DFD_Budushchee_2_0_Domains
+title Будущее 2.0 — Data Flow Diagram между доменами
+
+actor "Клиники" as Clinics
+actor "Финтех-подразделение" as Fintech
+actor "Команда ИИ" as AIteam
+actor "Партнёры (Фарма, Производители оборудования)" as Partners
+
+rectangle "Домен Клиника (операционные системы, мед. записи вне аналитики)" as DomainClinic
+rectangle "Домен Финтех (кредиты, платежи, счета)" as DomainFintech
+rectangle "Домен ИИ (ML/AI, feature store)" as DomainAI
+rectangle "Домен Партнёры (фарма, производители HW)" as DomainPartners
+rectangle "Платформа данных / Data Mesh (общая инфраструктура, каталог, оркестратор)" as DataPlatform
+rectangle "Домен Управленческая отчётность (витрины для портала самообслуживания)" as DomainBI
+
+database "Источники легаси DWH\n(SQL Server 2008)" as LegacyDWH
+
+rectangle "Интеграционный слой / API Gateway\n(ESB / API Management)" as Integration
+
+cloud "Облако\n(хранилища, очереди, стриминг)" as Cloud
+
+Clinics --> DomainClinic : Ввод данных по пациентам,\nпроцессы лечения
+DomainClinic --> Integration : Операционные события\n(без мед. карт) / CDC
+Integration --> DataPlatform : Потоки данных клиник\n(batch/stream)
+
+Fintech --> DomainFintech : Операции по счетам,\nкредиты, транзакции
+DomainFintech --> Integration : Финансовые события
+Integration --> DataPlatform : Потоки финтех-данных\n(batch/stream)
+
+AIteam --> DomainAI : Запросы на датасеты\nдля обучения моделей
+DomainAI --> DataPlatform : Требования к данным,\nконфигурации фич
+DataPlatform --> DomainAI : Обезличенные датасеты,\nфичи для моделей
+
+Partners --> DomainPartners : Каталоги, заказы,\nтелеметрия устройств
+DomainPartners --> Integration : События от партнёров\n(API, webhooks, telemetry)
+Integration --> DataPlatform : Потоки партнёрских данных
+
+LegacyDWH --> DataPlatform : Миграционные выгрузки\nисторических данных
+
+DataPlatform --> DomainBI : Доменные витрины\n(финансы, операции клиник,\nкачество сервисов)
+DomainBI --> Clinics : Отчёты и дашборды\nпо клиникам
+DomainBI --> Fintech : Финансовая отчётность,\nскоринг, KPI продуктов
+DomainBI --> AIteam : Метрики качества моделей\nи их влияния на бизнес
+DomainBI --> Partners : Aгрегированная\nотчётность (по договорённости)
+
+DataPlatform --> Cloud : Хранение сырых данных,\nзон raw/processed/curated
+Cloud --> DataPlatform : Обработка и трансформации\n(ETL/ELT, стриминг)
+
+@enduml
+

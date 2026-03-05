@@ -1,0 +1,16 @@
+project_name          = "budushchee-2-0"
+yandex_zone           = "ru-central1-a"
+vpc_cidr              = "10.0.0.0/16"
+public_subnet_cidr    = "10.0.1.0/24"
+private_subnet_cidr   = "10.0.2.0/24"
+portal_image_id       = "fd8kdq6d0p8sij7h5qe3" # Ubuntu 22.04 LTS - замените на актуальный image_id
+portal_platform_id    = "standard-v1"
+portal_cores           = 2
+portal_memory          = 4
+portal_disk_size       = 20
+dwh_allocated_storage = 100
+dwh_instance_class    = "s2.medium" # 2 vCPU, 8 GB RAM
+dwh_disk_type         = "network-ssd"
+dwh_postgres_version  = "14"
+dwh_username          = "dwh_user"
+dwh_password          = "change_me_strong_password"

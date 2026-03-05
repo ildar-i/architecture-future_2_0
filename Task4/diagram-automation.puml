@@ -1,0 +1,65 @@
+@startuml Terraform_Automation_Diagram
+title Будущее 2.0 — Автоматизация развёртывания (Terraform)
+
+actor "DevOps / Инженер" as DevOps
+
+node "CI/CD\n(GitLab CI / GitHub Actions)" as CICD
+node "Terraform CLI" as TF
+cloud "Yandex Cloud" as YC {
+  node "VPC Network" as VPC {
+    node "Public Subnet" as PubSubnet
+    node "Private Subnet" as PrivSubnet
+  }
+
+  node "NAT Gateway\n(Shared Egress Gateway)" as NAT
+  node "Route Table\n(Private)" as RouteTable
+
+  node "Compute Instance\nSelf-service Portal" as ComputePortal
+  node "Managed PostgreSQL\nDomain DWH" as MDBDWH
+  node "Object Storage\nData Lake" as ObjectStorage
+}
+
+DevOps --> CICD : commit/push\nизменений Terraform
+CICD --> TF : terraform init/plan/apply
+TF --> YC : API-вызовы для создания\n и обновления ресурсов
+
+TF --> VPC : Управление VPC Network
+TF --> PubSubnet : Создание публичной подсети\n(автоматический доступ в интернет)
+TF --> PrivSubnet : Создание приватной подсети\nс привязкой Route Table
+TF --> NAT : Создание NAT Gateway\n(Shared Egress Gateway)
+TF --> RouteTable : Создание Route Table\nдля приватной подсети
+TF --> ComputePortal : Создание Compute Instance портала\n(cores, memory, disk, image)
+TF --> MDBDWH : Создание Managed PostgreSQL\nдля доменного DWH
+TF --> ObjectStorage : Создание бакета Object Storage\nи включение версионирования
+
+note right of ComputePortal
+  Компонент управляется Terraform:
+  - платформа и ресурсы (cores, memory)
+  - образ (image_id)
+  - подсеть и Security Group
+  - метаданные и теги
+end note
+
+note right of MDBDWH
+  Компонент управляется Terraform:
+  - версия PostgreSQL
+  - resource preset (класс инстанса)
+  - размер диска и тип
+  - подсеть и Security Group
+  - пользователи и базы данных
+end note
+
+note right of ObjectStorage
+  Компонент управляется Terraform:
+  - имя бакета
+  - политика версионирования
+  - ACL и теги
+end note
+
+note right of NAT
+  Компонент управляется Terraform:
+  - Shared Egress Gateway
+  - маршрутизация для приватной подсети
+end note
+
+@enduml
