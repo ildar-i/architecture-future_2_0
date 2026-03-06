@@ -13,4 +13,5 @@ dwh_instance_class    = "s2.medium" # 2 vCPU, 8 GB RAM
 dwh_disk_type         = "network-ssd"
 dwh_postgres_version  = "14"
 dwh_username          = "dwh_user"
-dwh_password          = "change_me_strong_password"
+# dwh_password передаётся через переменную окружения TF_VAR_dwh_password или CI/CD secrets
+# yandex_token, yandex_cloud_id, yandex_folder_id также передаются через переменные окружения

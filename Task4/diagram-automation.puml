@@ -16,7 +16,7 @@ cloud "Yandex Cloud" as YC {
 
   node "Compute Instance\nSelf-service Portal" as ComputePortal
   node "Managed PostgreSQL\nDomain DWH" as MDBDWH
-  node "Object Storage\nData Lake" as ObjectStorage
+  node "Object Storage\nData Lake\n(разворачивается вручную)" as ObjectStorage
 }
 
 DevOps --> CICD : commit/push\nизменений Terraform
@@ -30,7 +30,7 @@ TF --> NAT : Создание NAT Gateway\n(Shared Egress Gateway)
 TF --> RouteTable : Создание Route Table\nдля приватной подсети
 TF --> ComputePortal : Создание Compute Instance портала\n(cores, memory, disk, image)
 TF --> MDBDWH : Создание Managed PostgreSQL\nдля доменного DWH
-TF --> ObjectStorage : Создание бакета Object Storage\nи включение версионирования
+DevOps --> ObjectStorage : Развёртывание вручную\n(через консоль Yandex Cloud)\nтребуются AWS-совместимые credentials
 
 note right of ComputePortal
   Компонент управляется Terraform:
@@ -50,10 +50,13 @@ note right of MDBDWH
 end note
 
 note right of ObjectStorage
-  Компонент управляется Terraform:
-  - имя бакета
-  - политика версионирования
-  - ACL и теги
+  Компонент разворачивается ВРУЧНУЮ:
+  - через консоль Yandex Cloud
+  - или через AWS CLI/SDK
+  (требуются AWS-совместимые credentials
+   от Service Account)
+  - не управляется Terraform
+  - имя: budushchee-2-0-data-lake
 end note
 
 note right of NAT

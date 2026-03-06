@@ -3,15 +3,25 @@ variable "project_name" {
   type        = string
 }
 
-variable "yandex_zone" {
-  description = "Зона доступности Yandex Cloud (например, ru-central1-a)"
+variable "yandex_token" {
+  description = "OAuth token для Yandex Cloud (передаётся через переменную окружения TF_VAR_yandex_token или CI/CD secrets)"
+  type        = string
+  sensitive   = true
+}
+
+variable "yandex_cloud_id" {
+  description = "ID облака Yandex Cloud (передаётся через переменную окружения TF_VAR_yandex_cloud_id или CI/CD secrets)"
   type        = string
 }
 
 variable "yandex_folder_id" {
-  description = "ID каталога Yandex Cloud, где будут созданы ресурсы (опционально, можно получить через yc config get folder-id)"
+  description = "ID каталога Yandex Cloud, где будут созданы ресурсы (передаётся через переменную окружения TF_VAR_yandex_folder_id или CI/CD secrets)"
   type        = string
-  default     = ""
+}
+
+variable "yandex_zone" {
+  description = "Зона доступности Yandex Cloud (например, ru-central1-a)"
+  type        = string
 }
 
 variable "vpc_cidr" {
