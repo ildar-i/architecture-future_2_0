@@ -1,0 +1,76 @@
+@startuml C4_Container_Budushchee_2_0
+title Будущее 2.0 — Целевая архитектура (через год) — Диаграмма контейнеров
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(admin, "Бизнес-пользователь / Аналитик", "Сотрудники клиники, финтех- и ИИ-подразделений, использующие витрину данных")
+Person(itOps, "Инженер / DevOps", "Отвечает за поддержку облачной инфраструктуры и CI/CD")
+
+System_Boundary(b2, "Экосистема «Будущее 2.0»") {
+  System_Ext(legacyDWH, "Легаси DWH (SQL Server)", "Хранит исторические данные по клиентам, медицине, финансам, персоналу, инвентаризации")
+
+  System(dataMesh, "Платформа данных (Data Platform / Data Mesh)", "Объединённая платформа для доменных витрин и обработки данных")
+
+  Container(apiGateway, "API Gateway / Integration Layer", "API Gateway + ESB (Apache Camel)", "Единая точка входа для интеграций между доменами и внешними партнёрами")
+
+  Container(biPortal, "Портал самообслуживания / Витрина данных", "Web-приложение (React/Angular + Backend)", "Самообслуживание по данным, конструктор отчётов, дашборды, управление доступом")
+
+  Container(fintechSvc, "Финтех-доменные сервисы", "Golang/Java микросервисы", "Кредитование, платёжные сервисы, скоринг, расчёт финансовых показателей")
+
+  Container(medCore, "Медицинский доменный слой / Клинические системы", "Microservices + существующие клинические системы", "Хранит и обрабатывает медицинские данные, не попадающие в BI-витрину")
+
+  Container(aiSvc, "ИИ-сервисы для медицины", "Python, ML/AI платформы", "Анализ медицинских данных, подсказки по диагнозам, risk scoring")
+
+  Container(pharmaPartner, "Партнёрские фармацевтические системы", "Внешние API", "Интеграция с фармкомпаниями (каталоги, заказы, поставки)")
+
+  Container(hwPartner, "Производитель мед. оборудования", "Внешние API / телеметрия", "Поток данных с устройств и систем мониторинга")
+
+  ContainerDb(metaStore, "Метахранилище / Data Catalog", "Metadata Store (например, Glue/Dataplex/Collibra)", "Глоссарий данных, SLA, lineage, владение доменами")
+
+  ContainerDb(securityLayer, "Сервис безопасности и IAM", "IAM, RBAC/ABAC, KMS, Audit", "Управление доступом, шифрование, аудит")
+
+  Container(pipelineOrch, "Оркестратор пайплайнов", "Airflow / Argo / Managed Orchestrator", "Оркестрация ETL/ELT, инкрементальные загрузки, SLA")
+
+  ContainerDb(domainWarehouseFin, "Финтех доменное хранилище", "Cloud Data Warehouse (BigQuery/Snowflake/Redshift)", "Финансовые витрины, отчётность, кредитные и платёжные данные")
+
+  ContainerDb(domainWarehouseOps, "Операционное доменное хранилище клиник", "Cloud Data Warehouse", "Операционная и управленческая отчётность по клиникам (без мед. карт)")
+
+  ContainerDb(domainWarehouseAI, "Доменное хранилище данных для ИИ", "Data Lake + Feature Store", "Обезличенные и агрегированные данные для обучения и инференса моделей")
+}
+
+Rel(admin, biPortal, "Строит отчёты, просматривает дашборды, конструирует витрины", "HTTPS")
+Rel(biPortal, domainWarehouseFin, "Читает агрегированные финансовые данные", "SQL/BI Connector")
+Rel(biPortal, domainWarehouseOps, "Читает агрегированные операционные данные клиник", "SQL/BI Connector")
+Rel(biPortal, domainWarehouseAI, "Читает высокоуровневые метрики качества ИИ", "SQL/BI Connector")
+
+Rel(fintechSvc, domainWarehouseFin, "Записывает события и агрегаты, читает аналитические данные", "Batch/Streaming")
+Rel(medCore, domainWarehouseOps, "Публикует операционные события (без мед. карт)", "Streaming (CDC/Kafka)")
+Rel(aiSvc, domainWarehouseAI, "Пишет фичи, читает обучающие выборки", "Batch/Streaming")
+
+Rel(legacyDWH, dataMesh, "Миграционные и инкрементальные выгрузки", "Batch ETL")
+Rel(dataMesh, domainWarehouseFin, "Потоки доменных данных", "Batch/Streaming")
+Rel(dataMesh, domainWarehouseOps, "Потоки доменных данных", "Batch/Streaming")
+Rel(dataMesh, domainWarehouseAI, "Потоки доменных данных", "Batch/Streaming")
+
+Rel(pharmaPartner, apiGateway, "Интеграция заказов, каталогов, поставок", "HTTPS/Webhooks")
+Rel(hwPartner, apiGateway, "Потоки телеметрии и статусов", "HTTPS/MQTT")
+Rel(apiGateway, fintechSvc, "Финансовые API", "HTTPS/REST")
+Rel(apiGateway, medCore, "Медицинские/операционные API", "HTTPS/REST")
+Rel(apiGateway, aiSvc, "API вызовов моделей", "HTTPS/gRPC")
+
+Rel(pipelineOrch, legacyDWH, "Оркестрирует выгрузки", "ODBC/JDBC")
+Rel(pipelineOrch, dataMesh, "Оркестрирует трансформации", "API/SDK")
+
+Rel(biPortal, securityLayer, "Авторизация и аутентификация пользователей", "OIDC/SAML")
+Rel(admin, securityLayer, "Проходит аутентификацию", "OIDC/SAML")
+Rel(fintechSvc, securityLayer, "Сервисные аккаунты, шифрование данных", "TLS/KMS")
+Rel(medCore, securityLayer, "Контроль доступа к мед. данным", "TLS/KMS")
+Rel(aiSvc, securityLayer, "Доступ к данным и ключам шифрования", "TLS/KMS")
+
+Rel(metaStore, biPortal, "Каталог доступных витрин и датасетов", "API")
+Rel(metaStore, dataMesh, "Регистрирует домены данных и их SLA", "API")
+
+SHOW_LEGEND()
+
+@enduml
+

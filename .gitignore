@@ -1,0 +1,18 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars.backup
+
+# Screenshots (должны быть в PR, но не в репозитории)
+*.png
+*.jpg
+*.jpeg
+!Image.png
+!diagram.png
+
+# OS files
+.DS_Store
+Thumbs.db
